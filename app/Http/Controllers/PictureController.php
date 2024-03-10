@@ -18,21 +18,16 @@ class PictureController extends Controller
     }
 
     /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
-    }
-
-    /**
      * Store a newly created resource in storage.
      */
     public function store(StorePictureRequest $request)
     {
         foreach ($request->file('files') as $file) {
-            $picture = Picture::create(['extension' => $file->getClientOriginalExtension()]);
-            Storage::put($picture->id . '.' . $file->getClientOriginalExtension(), $file->getContent());
+            $picture = Picture::create([
+                'name' => pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME),
+                'extension' => $file->getClientOriginalExtension(),
+            ]);
+            Storage::put($picture->slug . '.' . $file->getClientOriginalExtension(), $file->getContent());
         }
         return back()->with(['files' => Picture::query()->get()]);
     }
@@ -41,22 +36,6 @@ class PictureController extends Controller
      * Display the specified resource.
      */
     public function show(Picture $picture)
-    {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(Picture $picture)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(UpdatePictureRequest $request, Picture $picture)
     {
         //
     }
