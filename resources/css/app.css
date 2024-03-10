@@ -5,3 +5,37 @@
 [x-cloak] {
     display: none;
 }
+
+@-webkit-keyframes squiggles {
+    0% {
+        filter:url(#squiggly-0)
+    }
+    33% {
+        filter:url(#squiggly-1)
+    }
+    66% {
+        filter:url(#squiggly-2)
+    }
+    to {
+        filter:url(#squiggly-3)
+    }
+}
+
+@keyframes squiggles {
+    0% {
+        filter:url(#squiggly-0)
+    }
+    33% {
+        filter:url(#squiggly-1)
+    }
+    66% {
+        filter:url(#squiggly-2)
+    }
+    to {
+        filter:url(#squiggly-3)
+    }
+}
+
+.logo.squiggles {
+    animation: squiggles .34s linear infinite;
+}

@@ -1,17 +1,35 @@
 <script setup>
-import { Head, Link } from '@inertiajs/vue3';
-import { ref, watch } from 'vue';
-import { FwbFileInput } from 'flowbite-vue';
+import { Head, Link, router } from "@inertiajs/vue3";
+import { computed, ref, watch } from "vue";
+import { FwbFileInput } from "flowbite-vue";
 
 const files = ref([]);
-const errors = ref([]);
+const formErrors = ref([]);
+const squiggles = ref(false);
 
-watch(files, async (newValue, oldValue) => {
-    errors.value = [];
+const uploadDisabled = computed(() => {
+    return files.value.length === 0 || formErrors.value.length > 0;
+});
+
+watch(files, async (newValue) => {
+    formErrors.value = [];
     if (newValue.length > 5) {
-        errors.value.push('Изображений больше пяти');
+        formErrors.value.push("Изображений больше пяти");
     }
-})
+});
+
+router.on("start", (event) => {
+    squiggles.value = true;
+});
+
+router.on("error", (event) => {
+    squiggles.value = false;
+    files.value = [];
+});
+
+router.on("success", (event) => {
+    squiggles.value = false;
+});
 
 defineProps({
     canLogin: Boolean,
@@ -24,35 +42,88 @@ defineProps({
 <template>
     <Head title="Welcome" />
 
-    <div class="relative sm:flex sm:justify-center sm:items-center min-h-screen bg-dots-darker bg-center bg-gray-100 dark:bg-dots-lighter dark:bg-gray-900 selection:bg-red-500 selection:text-white">
+    <div
+        class="relative sm:flex sm:justify-center sm:items-center min-h-screen bg-dots-darker bg-center bg-gray-100 dark:bg-dots-lighter dark:bg-gray-900 selection:bg-red-500 selection:text-white"
+    >
         <div v-if="canLogin" class="sm:fixed sm:top-0 sm:end-0 p-6 text-end z-10">
-            <Link v-if="$page.props.auth.user" :href="route('dashboard')" class="font-semibold text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white focus:outline focus:outline-2 focus:rounded-sm focus:outline-red-500">Dashboard</Link>
+            <Link v-if="$page.props.auth.user"
+                :href="route('dashboard')"
+                class="font-semibold text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white focus:outline focus:outline-2 focus:rounded-sm focus:outline-red-500"
+                >{{ $t('Dashboard') }}</Link>
 
             <template v-else>
-                <Link :href="route('login')" class="font-semibold text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white focus:outline focus:outline-2 focus:rounded-sm focus:outline-red-500">Log in</Link>
+                <Link
+                    :href="route('login')"
+                    class="font-semibold text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white focus:outline focus:outline-2 focus:rounded-sm focus:outline-red-500"
+                    >{{ $t('Log in') }}
+                </Link>
 
-                <Link v-if="canRegister" :href="route('register')" class="ms-4 font-semibold text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white focus:outline focus:outline-2 focus:rounded-sm focus:outline-red-500">Register</Link>
+                <Link
+                    v-if="canRegister"
+                    :href="route('register')"
+                    class="ms-4 font-semibold text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white focus:outline focus:outline-2 focus:rounded-sm focus:outline-red-500"
+                    >{{ $t('Register') }}</Link
+                >
             </template>
         </div>
 
-        <div class="max-w-xl mx-auto p-6 lg:p-8">
-            <div class="flex justify-center">
-                <div class="max-w-md m-auto">
-                    <img class="" src="/images/pictrix-main-picture.jpg" alt="PicTrix Image Service">
-                </div>
-            </div>
-
-            <div class="flex flex-wrap justify-center mt-16 px-6 sm:items-center sm:justify-between">
-                <fwb-file-input class="w-full" v-model="files" label="Выберите изображения" size="lg" multiple>
-                    <p class="!mt-1 text-sm text-gray-500 dark:text-gray-300">
-                        Не более пяти файлов PNG, JPG или GIF с максимальным разрешением 1024x1024 px
-                    </p>
-                </fwb-file-input>
-                <span class="w-full text-red-700" v-for="error in errors">{{ error }}</span>
-                <div v-if="files.length !== 0" class="mt-4 border-[1px] border-gray-300 dark:border-gray-600 p-2 rounded-md">
-                    <div v-for="file in files" :key="file">
-                        {{ file.name }}
+        <div class="max-w-4xl mx-auto p-6 lg:p-8">
+            <div
+                class="flex flex-wrap justify-center -mx-4 sm:items-center sm:justify-between"
+            >
+                <div class="w-full md:w-1/2 px-4 flex justify-center">
+                    <div class="max-w-md m-auto">
+                        <img
+                            class="logo rounded-lg"
+                            :class="squiggles ? 'squiggles' : ''"
+                            src="/images/pictrix-main-picture.jpg"
+                            alt="PicTrix Image Service"
+                        />
                     </div>
+                </div>
+                <div class="prose w-full md:w-1/2 px-4">
+                    <h2>{{ $t('pictrix.select_images')}}</h2>
+                    <fwb-file-input
+                        class="w-full"
+                        v-model="files"
+                        size="lg"
+                        multiple
+                    >
+                        <p
+                            class="!mt-1 text-sm text-gray-500 dark:text-gray-300"
+                        >
+                            Не более пяти файлов PNG, JPG или GIF с максимальным
+                            разрешением 1024x1024 px и размером до 1 мегабайта
+                        </p>
+                    </fwb-file-input>
+                    <div
+                        v-if="files.length !== 0 && !uploadDisabled"
+                        class="mt-4 border-[1px] border-gray-300 dark:border-gray-600 p-2 rounded-md"
+                    >
+                        <div class="p-1" v-for="file in files" :key="file">
+                            {{ file.name }}
+                        </div>
+                    </div>
+                    <span
+                        class="w-full text-red-700"
+                        v-for="error in formErrors"
+                        >{{ error }}</span
+                    >
+                    <span
+                        class="w-full text-red-700"
+                        v-for="error in $page.props.errors"
+                        >{{ error }}</span
+                    >
+                    <Link
+                        :disabled="uploadDisabled"
+                        class="text-white bg-blue-700 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg dark:bg-blue-600 focus:outline-none dark:focus:ring-blue-800 hover:bg-blue-800 dark:hover:bg-blue-700 disabled:opacity-25 text-base px-6 py-3 w-full mt-4"
+                        :href="route('pictures.store')"
+                        method="post"
+                        as="button"
+                        type="button"
+                        :data="{ files: files }"
+                        >{{ $t("pictrix.upload") }}</Link
+                    >
                 </div>
             </div>
         </div>

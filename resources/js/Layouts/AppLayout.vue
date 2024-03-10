@@ -281,7 +281,7 @@ const logout = () => {
             </header>
 
             <!-- Page Content -->
-            <main>
+            <main class="prose lg:prose-xl">
                 <slot />
             </main>
         </div>
